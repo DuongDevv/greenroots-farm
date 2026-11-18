@@ -155,7 +155,8 @@ Every controller endpoint MUST declare its OpenAPI contracts and error specifica
 
 1. **Authentication & Authorization**:
    - Public endpoints: `@Public()`
-   - Authenticated/Role-guarded endpoints: `@ApiAuth(...roles: UserRole[])` (automatically attaches `@ApiBearerAuth()`, `@ApiUnauthorizedResponseRfc9457()`, and `@ApiForbiddenResponseRfc9457()`).
+   - Authenticated endpoints: `@ApiAuth(...roles: UserRole[])` attaches `@ApiBearerAuth()` and `@ApiUnauthorizedResponseRfc9457()`. Passing `roles` additionally attaches `@Roles(...)` and `@ApiForbiddenResponseRfc9457()`, because only then can `RolesGuard` reject the request.
+   - Business-level authorization: when a handler enforces a permission the role guard cannot see (resource ownership, folder scope, account status, feature gating), declare `@ApiForbiddenResponseRfc9457()` on that handler. It is never attached by default, so the handlers carrying it stay exactly the endpoints with an authorization branch.
 2. **Endpoint Description**:
    - `@ApiOperation({ summary: "Short imperative summary", description: "Detailed behavioral description" })`
 3. **Successful Response Envelope**:
@@ -174,6 +175,8 @@ Every controller endpoint MUST declare its OpenAPI contracts and error specifica
 ```typescript
 @ApiTags(MEDIA_ROUTES.TAG)
 @Controller({ path: MEDIA_ROUTES.BASE, version: "1" })
+@ApiBadRequestResponseRfc9457()
+@ApiInternalServerErrorResponseRfc9457()
 export class MediaController {
   constructor(private readonly cloudinaryService: CloudinaryService) {}
 
@@ -187,10 +190,8 @@ export class MediaController {
       "Generates an HMAC SHA-256 signature and upload parameters for client-side direct uploads without streaming files through API memory.",
   })
   @ApiOkResponseGeneric(SignedUploadResponseDto)
-  @ApiBadRequestResponseRfc9457()
   @ApiForbiddenResponseRfc9457()
   @ApiUnprocessableEntityResponseRfc9457()
-  @ApiInternalServerErrorResponseRfc9457()
   getUploadSignature(
     @Body() dto: SignedUploadDto,
     @CurrentUser() user: JwtPayload,
@@ -203,6 +204,8 @@ export class MediaController {
   }
 }
 ```
+
+- `400` and `500` are hoisted to the class because every handler in the module inherits an unhandled `ValidationPipe` rejection and the global exception filter. Route-level decorators cover only what that handler adds: `403` for the folder-role rule and `422` for the upload constraint.
 
 ---
 
