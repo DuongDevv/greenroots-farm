@@ -18,6 +18,8 @@ import { MEDIA_ROUTES } from "./media.routes";
 
 @ApiTags(MEDIA_ROUTES.TAG)
 @Controller({ path: MEDIA_ROUTES.BASE, version: "1" })
+@ApiBadRequestResponseRfc9457()
+@ApiInternalServerErrorResponseRfc9457()
 export class MediaController {
   constructor(private readonly cloudinaryService: CloudinaryService) {}
 
@@ -31,10 +33,8 @@ export class MediaController {
       "Generates an HMAC SHA-256 signature and upload parameters for client-side direct asset uploads to Cloudinary without streaming files through API memory.",
   })
   @ApiOkResponseGeneric(SignedUploadResponseDto)
-  @ApiBadRequestResponseRfc9457()
   @ApiForbiddenResponseRfc9457()
   @ApiUnprocessableEntityResponseRfc9457()
-  @ApiInternalServerErrorResponseRfc9457()
   getUploadSignature(
     @Body() dto: SignedUploadDto,
     @CurrentUser() user: JwtPayload,
