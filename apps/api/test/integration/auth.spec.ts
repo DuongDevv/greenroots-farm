@@ -1752,10 +1752,11 @@ describe("Authentication Integration", () => {
 
         expect(res.status).toBe(401);
         const error = res.body as Rfc9457Error;
-        expect([
+        const allowedCodes: string[] = [
           API_ERROR_CODES.AUTH_ACCOUNT_SUSPENDED,
           API_ERROR_CODES.AUTH_TOKEN_INVALID_OR_EXPIRED,
-        ]).toContain(error.code!);
+        ];
+        expect(allowedCodes).toContain(error.code!);
       });
 
       it("rejects malformed or empty refresh token", async () => {

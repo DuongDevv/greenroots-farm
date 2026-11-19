@@ -24,7 +24,7 @@ class TestIdempotentController {
   @Post("test/idempotent-mutation")
   @Idempotent({ required: true })
   testMutation(@Body() body: Record<string, unknown>) {
-    if (body.simulateError === true) {
+    if (body["simulateError"] === true) {
       throw new InternalServerErrorException(
         "Mô phỏng lỗi giao dịch để kiểm tra giải phóng khóa Idempotency",
       );
