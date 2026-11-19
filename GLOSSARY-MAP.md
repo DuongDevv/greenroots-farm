@@ -34,6 +34,7 @@ One decision per file. Read the ones that touch the area you are changing before
 - `docs/adr/0017-password-and-token-cryptography.md` — Scrypt password hashing and digest-only token storage.
 - `docs/adr/0018-address-coordinate-trust-and-delivery-fee-integrity.md` — District-code geographic SSOT and delivery fee integrity.
 - `docs/adr/0019-staff-rbac-and-admin-audit.md` — Staff RBAC, last-super-admin invariant, and admin audit log.
+- `docs/adr/0020-column-scoped-write-ownership-of-users.md` — Disjoint write ownership of the `users` table by column group.
 
 ### Context-Scoped Decisions
 
