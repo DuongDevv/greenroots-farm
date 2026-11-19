@@ -135,7 +135,9 @@ Apply these rules in order; the first match wins, so the decision never depends 
 
 ## Epic Convention
 
-- Epic titles keep the human form `epic(<area>): <summary>` and carry `type:epic`; they are containers, not commits, so they do not use a Conventional Commits body.
+- Epic titles keep the human form `epic(<area>): <summary>` and carry `type:epic`; they are containers, not commits, so they do not use a Conventional Commits body. The `<area>` in the title is a domain scope, not an `area:*` label.
+- An epic carries `area:*` for every workspace its sub-issues touch, and no others. When a sub-issue introduces an area the epic does not carry yet, add that label in the same edit, so the epic's area set always equals the union of its children's areas.
+- An epic carries exactly one `type:*` label, `type:epic`. Remove any work-type label left over from an earlier classification.
 - Every implementation issue belongs to exactly one epic through native sub-issues.
 - An epic closes when all of its sub-issues are closed.
 - Split parents that are replaced by children are closed as `not planned`; the epic stays open and owns the children.
