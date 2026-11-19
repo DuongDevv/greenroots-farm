@@ -29,6 +29,10 @@ GreenRoots Farm sells farm-grown produce through a storefront and operates produ
 | Two-Level Revocation | An access-token invalidation strategy in Redis distinguishing single-device logout (`auth:revoked:token:<jti>`) from account-wide security events (`auth:revoked:user:<userId>`). | `ADR-0016`, Redis standards         |
 | District Code        | The canonical Ho Chi Minh City district identifier from `HCMC_DISTRICTS`; the only geographic input accepted for an address.                                                      | `ADR-0018`, `HCMC_DISTRICTS`        |
 | Staff Audit Log      | An append-only record of every staff create, role change, status change, profile edit, and credential reset.                                                                      | `ADR-0019`, `staff_audit_logs`      |
+| Account Profile      | The self-service view of an account's own row: identity, contact fields, role, status, loyalty points, verification flag, and timestamps, excluding credentials and tokens.       | `GET /users/me`, ADR-0020           |
+| Identity Summary     | The minimal account shape returned with authentication responses: id, email, full name, role, and status. It is not a profile.                                                    | `userInfoSchema`                    |
+| Account Phone        | The contact phone stored on the account itself and editable through the profile surface.                                                                                          | `users.phone`                       |
+| Receiver Phone       | The delivery-contact phone stored per saved address, independent of the Account Phone.                                                                                            | `user_addresses.phoneNumber`        |
 
 ## Invariants
 
