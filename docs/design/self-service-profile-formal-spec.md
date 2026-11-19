@@ -149,6 +149,8 @@ The update is one statement with `RETURNING`. There is no read-modify-write cycl
 - `phone`: a 10-digit Vietnamese mobile number matching `0[35789]\d{8}`, or `null` to clear it.
 - An empty object is rejected. An empty string for `phone` is rejected; only `null` clears the field.
 
+Per-field failures surface as `400 VALIDATION_FAILED` with an `invalidParams` entry. `formatZodIssue()` in `apps/api/src/common/pipes/zod-validation.pipe.ts` maps custom refine messages from `zSanitizedString` and `zPhoneNumber` to `CUSTOM_VALIDATION_ERROR`, extra keys to `UNRECOGNIZED_KEYS`, and native Zod issues to their typed codes.
+
 Responses:
 
 | Surface               | Success                     | Errors                                                                          |
@@ -174,36 +176,36 @@ No new entries are added to `API_ERROR_CODES`: the profile surface reuses `VALID
 
 ## Domain Invariant Taxonomy
 
-| Invariant       | Name                 | Formal statement                                                                                              | Enforcement seam                                        | Verification test                                                        |
-| :-------------- | :------------------- | :------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------ | :----------------------------------------------------------------------- |
-| `INV-PROFILE-1` | Projection closure   | The response contains exactly `PROFILE_COLUMNS` plus the response envelope                                    | `PROFILE_COLUMNS` closed select in `ProfileService`     | Response keys equal the contract list; no credential keys present        |
-| `INV-PROFILE-2` | Self-only identity   | The target user equals the JWT `sub` for every read and write                                                 | Route has no id parameter; service takes `sub` only     | Token for user A never reads or writes user B                            |
-| `INV-PROFILE-3` | Read-only identity   | No request can change `email`, `role`, `status`, `rewardPoints`, `emailVerified`, `createdAt`, or `updatedAt` | Strict DTO with two keys; unknown keys fail at the pipe | Sending each protected field returns `400 UNRECOGNIZED_KEYS`             |
-| `INV-PROFILE-4` | Writable set         | Every persisted mutation is a subset of `{fullName, phone}`                                                   | `UpdateProfileDto` plus the service's patch builder     | Database row differs only in the supplied fields                         |
-| `INV-PROFILE-5` | Non-empty command    | A PATCH with no writable field is rejected, never treated as a no-op                                          | Schema refinement requiring at least one key            | Empty body returns `400 VALIDATION_FAILED`                               |
-| `INV-PROFILE-6` | Phone disambiguation | Absent keeps the value, `null` clears it, and an empty string is invalid                                      | `zPhoneNumber().nullable()` plus partial object         | Three cases produce unchanged, `null`, and `400` respectively            |
-| `INV-PROFILE-7` | Normalized name      | The stored `fullName` is sanitized, trimmed, whitespace-collapsed, and 1–100 characters                       | `zSanitizedString({ min: 1, max: 100 })`                | HTML input is stripped; 101 characters return `400 TOO_BIG`              |
-| `INV-PROFILE-8` | Live subject         | Every read and write filters `deletedAt IS NULL`, and a missing subject yields `401`                          | `and(eq(users.id, sub), isNull(users.deletedAt))`       | Soft-deleted user with a valid token receives `401`                      |
-| `INV-PROFILE-9` | Last-write-wins      | Concurrent PATCHes converge per column to the later commit; no unset column is overwritten                    | Single `UPDATE` built from the parsed patch             | Two concurrent PATCHes leave both supplied columns at their final values |
+| Invariant       | Name                 | Formal statement                                                                                              | Enforcement seam                                        | Verification test                                                           |
+| :-------------- | :------------------- | :------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------ | :-------------------------------------------------------------------------- |
+| `INV-PROFILE-1` | Projection closure   | The response contains exactly `PROFILE_COLUMNS` plus the response envelope                                    | `PROFILE_COLUMNS` closed select in `ProfileService`     | Response keys equal the contract list; no credential keys present           |
+| `INV-PROFILE-2` | Self-only identity   | The target user equals the JWT `sub` for every read and write                                                 | Route has no id parameter; service takes `sub` only     | Token for user A never reads or writes user B                               |
+| `INV-PROFILE-3` | Read-only identity   | No request can change `email`, `role`, `status`, `rewardPoints`, `emailVerified`, `createdAt`, or `updatedAt` | Strict DTO with two keys; unknown keys fail at the pipe | Sending each protected field returns `400 UNRECOGNIZED_KEYS`                |
+| `INV-PROFILE-4` | Writable set         | Every persisted mutation is a subset of `{fullName, phone}`                                                   | `UpdateProfileDto` plus the service's patch builder     | Database row differs only in the supplied fields                            |
+| `INV-PROFILE-5` | Non-empty command    | A PATCH with no writable field is rejected, never treated as a no-op                                          | Schema refinement requiring at least one key            | Empty body returns `400 VALIDATION_FAILED`                                  |
+| `INV-PROFILE-6` | Phone disambiguation | Absent keeps the value, `null` clears it, and an empty string is invalid                                      | `zPhoneNumber().nullable()` plus partial object         | Three cases produce unchanged, `null`, and `400` respectively               |
+| `INV-PROFILE-7` | Normalized name      | The stored `fullName` is sanitized, trimmed, whitespace-collapsed, and 1–100 characters                       | `zSanitizedString({ min: 1, max: 100 })`                | HTML input is stripped; 101 characters return `400 CUSTOM_VALIDATION_ERROR` |
+| `INV-PROFILE-8` | Live subject         | Every read and write filters `deletedAt IS NULL`, and a missing subject yields `401`                          | `and(eq(users.id, sub), isNull(users.deletedAt))`       | Soft-deleted user with a valid token receives `401`                         |
+| `INV-PROFILE-9` | Last-write-wins      | Concurrent PATCHes converge per column to the later commit; no unset column is overwritten                    | Single `UPDATE` built from the parsed patch             | Two concurrent PATCHes leave both supplied columns at their final values    |
 
 ### Edge cases
 
-| Case                                | Expected behaviour                                           |
-| :---------------------------------- | :----------------------------------------------------------- |
-| `{}`                                | `400 VALIDATION_FAILED`, refinement reason, no database call |
-| `{ "fullName": "" }`                | `400` with `REQUIRED` on `fullName`                          |
-| `{ "fullName": "   " }`             | `400` after sanitize and trim                                |
-| `{ "fullName": "<b>An</b>" }`       | Stored as `An`                                               |
-| `{ "fullName": <101 characters> }`  | `400` with `TOO_BIG` on `fullName`                           |
-| `{ "phone": "0912345678" }`         | Stored as `0912345678`                                       |
-| `{ "phone": null }`                 | Column set to `NULL`                                         |
-| `{ "phone": "" }`                   | `400` with `INVALID_VALUE` on `phone`                        |
-| `{ "phone": "+84912345678" }`       | `400` with `INVALID_VALUE` on `phone`                        |
-| `{ "email": "x@y.z" }`              | `400` with `UNRECOGNIZED_KEYS` on `email`                    |
-| `{ "rewardPoints": 999 }`           | `400` with `UNRECOGNIZED_KEYS` on `rewardPoints`             |
-| Missing bearer token                | `401` from `JwtAuthGuard`                                    |
-| Valid token for a soft-deleted user | `401 AUTH_TOKEN_INVALID_OR_EXPIRED`                          |
-| Valid token for a suspended user    | `200`; the session is revoked at the next refresh or by #77  |
+| Case                                | Expected behaviour                                                        |
+| :---------------------------------- | :------------------------------------------------------------------------ |
+| `{}`                                | `400 VALIDATION_FAILED` with `CUSTOM_VALIDATION_ERROR`, no database call  |
+| `{ "fullName": "" }`                | `400` with `CUSTOM_VALIDATION_ERROR` on `fullName` ("Field is required.") |
+| `{ "fullName": "   " }`             | `400` after sanitize and trim                                             |
+| `{ "fullName": "<b>An</b>" }`       | Stored as `An`                                                            |
+| `{ "fullName": <101 characters> }`  | `400` with `CUSTOM_VALIDATION_ERROR` on `fullName`                        |
+| `{ "phone": "0912345678" }`         | Stored as `0912345678`                                                    |
+| `{ "phone": null }`                 | Column set to `NULL`                                                      |
+| `{ "phone": "" }`                   | `400` with `CUSTOM_VALIDATION_ERROR` on `phone`                           |
+| `{ "phone": "+84912345678" }`       | `400` with `CUSTOM_VALIDATION_ERROR` on `phone`                           |
+| `{ "email": "x@y.z" }`              | `400` with `UNRECOGNIZED_KEYS` on `email`                                 |
+| `{ "rewardPoints": 999 }`           | `400` with `UNRECOGNIZED_KEYS` on `rewardPoints`                          |
+| Missing bearer token                | `401` from `JwtAuthGuard`                                                 |
+| Valid token for a soft-deleted user | `401 AUTH_TOKEN_INVALID_OR_EXPIRED`                                       |
+| Valid token for a suspended user    | `200`; the session is revoked at the next refresh or by #77               |
 
 ## Test Matrix
 
