@@ -133,7 +133,7 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
             </p>
           </div>
 
-          <div className="shrink-0 rounded-2xl border border-white/20 bg-white/10 p-4 text-center font-mono backdrop-blur-md">
+          <div className="shrink-0 rounded-2xl border border-white/20 bg-white/10 p-4 text-center backdrop-blur-md">
             <span className="block text-xs text-green-200 uppercase">
               Miễn phí ship
             </span>
@@ -155,7 +155,7 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
             <CardContent className="space-y-4 p-6">
               <div className="flex items-center justify-between border-b border-border-subtle pb-3">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex size-7 items-center justify-center rounded-full bg-brand-forest font-mono text-xs font-bold text-white">
+                  <span className="flex size-7 items-center justify-center rounded-full bg-brand-forest text-xs font-bold text-white">
                     1
                   </span>
                   <h2 className="text-base font-black text-brand-dark">
@@ -188,7 +188,7 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
                           <b className="block text-sm font-extrabold text-gray-900">
                             {plan.name}
                           </b>
-                          <span className="font-mono text-xs font-bold text-brand-forest">
+                          <span className="text-xs font-bold text-brand-forest">
                             {plan.weightPerDeliveryKg} kg rau củ / chuyến
                           </span>
                         </div>
@@ -200,7 +200,7 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
 
                       <div className="flex items-baseline justify-between border-t border-border-subtle pt-2">
                         <div>
-                          <span className="font-mono text-xl font-black text-brand-dark">
+                          <span className="text-xl font-black text-brand-dark">
                             {formatVnd(plan.priceVnd)}
                           </span>
                           <span className="text-[11px] text-gray-400">
@@ -211,8 +211,8 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
                           ~
                           {formatVnd(
                             Math.round(plan.priceVnd / plan.totalDeliveries),
-                          )}{" "}
-                          / chuyến
+                          )}
+                          {""}/ chuyến
                         </span>
                       </div>
                     </div>
@@ -227,7 +227,7 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
             <CardContent className="space-y-4 p-6">
               <div className="flex items-center justify-between border-b border-border-subtle pb-3">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex size-7 items-center justify-center rounded-full bg-brand-forest font-mono text-xs font-bold text-white">
+                  <span className="flex size-7 items-center justify-center rounded-full bg-brand-forest text-xs font-bold text-white">
                     2
                   </span>
                   <h2 className="text-base font-black text-brand-dark">
@@ -299,7 +299,7 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
             <CardContent className="space-y-4 p-6">
               <div className="border-b border-border-subtle pb-3">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex size-7 items-center justify-center rounded-full bg-brand-forest font-mono text-xs font-bold text-white">
+                  <span className="flex size-7 items-center justify-center rounded-full bg-brand-forest text-xs font-bold text-white">
                     3
                   </span>
                   <h2 className="text-base font-black text-brand-dark">
@@ -383,14 +383,14 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
             <CardContent className="space-y-4 p-6">
               <div className="flex flex-col justify-between gap-2 border-b border-border-subtle pb-3 sm:flex-row sm:items-center">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex size-7 items-center justify-center rounded-full bg-brand-forest font-mono text-xs font-bold text-white">
+                  <span className="flex size-7 items-center justify-center rounded-full bg-brand-forest text-xs font-bold text-white">
                     4
                   </span>
                   <h2 className="text-base font-black text-brand-dark">
                     Lịch Trình 8 Chuyến Giao (Cho Phép Tạm Dừng Khi Đi Vắng)
                   </h2>
                 </div>
-                <span className="font-mono text-xs text-gray-500">
+                <span className="text-xs text-gray-500">
                   Chu kỳ 30 ngày tới
                 </span>
               </div>
@@ -409,7 +409,7 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
                           : "border border-green-200 bg-green-50/40"
                       }`}
                     >
-                      <span className="block font-mono text-[10px] text-gray-400">
+                      <span className="block text-[10px] text-gray-400">
                         Chuyến {session.sessionNumber}
                       </span>
                       <b className="block text-xs font-bold text-gray-900">
@@ -459,7 +459,7 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500">Định lượng mỗi kỳ:</span>
-                  <b className="font-mono font-bold text-brand-forest">
+                  <b className="font-bold text-brand-forest">
                     {activePlan.weightPerDeliveryKg} kg rau củ
                   </b>
                 </div>
@@ -471,15 +471,13 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500">Tần suất giao hàng:</span>
-                  <b className="font-mono font-bold">
+                  <b className="font-bold">
                     {activePlan.totalDeliveries} chuyến / tháng
                   </b>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500">Giờ giao hỏa tốc:</span>
-                  <b className="font-mono text-brand-dark">
-                    07:00 – 09:00 Sáng
-                  </b>
+                  <b className="text-brand-dark">07:00 – 09:00 Sáng</b>
                 </div>
 
                 <div className="space-y-1 rounded-xl border border-green-200 bg-green-50 p-3">
@@ -491,7 +489,7 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
                     <span className="text-[11px] uppercase">Miễn Phí 100%</span>
                   </div>
                   <span className="block text-[10px] leading-tight text-gray-500">
-                    Áp dụng tuyến gom cố định trong bán kính{" "}
+                    Áp dụng tuyến gom cố định trong bán kính{""}
                     {BUSINESS_RULES.SHIPPING.SUBSCRIPTION_FREE_RADIUS_KM} km từ
                     Farm Củ Chi
                   </span>
@@ -503,7 +501,7 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
                   <span className="text-xs font-semibold text-gray-600">
                     Tổng thanh toán trả trước:
                   </span>
-                  <span className="font-mono text-2xl font-black text-brand-dark">
+                  <span className="text-2xl font-black text-brand-dark">
                     {formatVnd(activePlan.priceVnd)}
                   </span>
                 </div>
@@ -559,7 +557,7 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
 
           <div className="space-y-1 text-xs">
             <span className="block text-gray-500">Số tiền thanh toán:</span>
-            <b className="font-mono text-xl font-black text-brand-dark">
+            <b className="text-xl font-black text-brand-dark">
               {formatVnd(activePlan.priceVnd)}
             </b>
             <p className="text-[11px] text-gray-400">
