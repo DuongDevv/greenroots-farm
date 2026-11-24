@@ -1,5 +1,6 @@
 import type { UserRole } from "@greenroots/shared";
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export interface BackofficeUser {
   readonly id: string;
@@ -10,8 +11,14 @@ export interface BackofficeUser {
 
 interface AuthState {
   accessToken: string | null;
+  refreshToken: string | null;
   user: BackofficeUser | null;
-  setSession: (accessToken: string, user: BackofficeUser) => void;
+  setSession: (
+    accessToken: string,
+    user: BackofficeUser,
+    refreshToken?: string | null,
+  ) => void;
+  setAccessToken: (accessToken: string) => void;
   loginDemoRole: (role: UserRole) => void;
   logout: () => void;
 }
@@ -46,19 +53,45 @@ const DEMO_USERS: Record<
   },
 };
 
-export const useAuthStore = create<AuthState>()((set) => ({
-  accessToken: null,
-  user: null,
-  setSession: (accessToken, user) => set({ accessToken, user }),
-  loginDemoRole: (role) => {
-    if (role === "guest" || role === "customer") return;
-    set({
-      accessToken: `demo-jwt-${role}`,
-      user: DEMO_USERS[role],
-    });
-  },
-  logout: () => set({ accessToken: null, user: null }),
-}));
+const ssrMemoryFallback = new Map<string, string>();
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      accessToken: null,
+      refreshToken: null,
+      user: null,
+      setSession: (accessToken, user, refreshToken = null) =>
+        set({ accessToken, user, refreshToken }),
+      setAccessToken: (accessToken) => set({ accessToken }),
+      loginDemoRole: (role) => {
+        if (role === "guest" || role === "customer") return;
+        set({
+          accessToken: `demo-jwt-${role}`,
+          refreshToken: `demo-refresh-${role}`,
+          user: DEMO_USERS[role],
+        });
+      },
+      logout: () => set({ accessToken: null, refreshToken: null, user: null }),
+    }),
+    {
+      name: "greenroots-backoffice-auth",
+      storage: createJSONStorage(() =>
+        typeof window === "undefined"
+          ? {
+              getItem: (key) => ssrMemoryFallback.get(key) ?? null,
+              setItem: (key, value) => {
+                ssrMemoryFallback.set(key, value);
+              },
+              removeItem: (key) => {
+                ssrMemoryFallback.delete(key);
+              },
+            }
+          : window.localStorage,
+      ),
+    },
+  ),
+);
 
 export function getDefaultRouteForRole(role: UserRole): string {
   if (role === "farm_staff") return "/farming/logs";

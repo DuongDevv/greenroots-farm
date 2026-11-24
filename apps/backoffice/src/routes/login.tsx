@@ -9,10 +9,12 @@ import {
   CardHeader,
   CardTitle,
   Input,
+  toast,
 } from "@greenroots/ui";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { AlertCircle, Leaf } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { AlertCircle, Eye, EyeOff, Leaf, Loader2 } from "lucide-react";
 import { useState, type SubmitEvent } from "react";
+import { api } from "@/lib/api-client";
 import { getDefaultRouteForRole, useAuthStore } from "@/stores/auth.store";
 
 export const Route = createFileRoute("/login")({
@@ -22,20 +24,72 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [formNotice, setFormNotice] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const setSession = useAuthStore((state) => state.setSession);
   const loginDemoRole = useAuthStore((state) => state.loginDemoRole);
   const navigate = useNavigate();
 
+  // Đăng nhập nhanh cho môi trường Dev
   function handleQuickLogin(role: UserRole) {
     loginDemoRole(role);
     void navigate({ to: getDefaultRouteForRole(role) });
   }
 
-  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+  // Xử lý đăng nhập bằng API thật
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    setFormNotice(
-      "API /auth/login sẽ nối ở bước tiếp theo; dùng nút Demo bên dưới.",
-    );
+    if (!email.trim() || !password) {
+      setErrorMessage("Vui lòng nhập đầy đủ email và mật khẩu.");
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const { data, error } = await api.POST("/api/v1/auth/login", {
+        body: {
+          email: email.trim(),
+          password,
+        },
+      });
+
+      if (error) {
+        const errorDetail =
+          ("detail" in error &&
+            typeof error.detail === "string" &&
+            error.detail) ||
+          "Email hoặc mật khẩu không chính xác.";
+        setErrorMessage(errorDetail);
+        return;
+      }
+
+      const { accessToken, refreshToken, user } = data.data;
+
+      // BẢO VỆ BỀ MẶT: Chặn tài khoản khách hàng đăng nhập vào Backoffice
+      if (user.role === "customer") {
+        setErrorMessage(
+          "Tài khoản khách hàng không có quyền truy cập Backoffice nội bộ.",
+        );
+        return;
+      }
+
+      // Lưu phiên đăng nhập bền vững
+      setSession(accessToken, user, refreshToken);
+      toast.success(`Chào mừng trở lại, ${user.fullName}!`);
+
+      // Điều hướng tới đúng trang theo vai trò
+      void navigate({ to: getDefaultRouteForRole(user.role) });
+    } catch {
+      setErrorMessage(
+        "Không thể kết nối đến máy chủ API. Vui lòng kiểm tra lại mạng.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -55,81 +109,128 @@ function LoginPage() {
 
         <CardContent className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-3">
-            {formNotice ? (
+            {errorMessage ? (
               <Alert
-                role="status"
-                className="border-border-subtle bg-surface-warm text-gray-800"
+                role="alert"
+                className="border-red-200 bg-red-50 text-red-900"
               >
                 <AlertCircle
-                  className="size-4 text-gray-500"
+                  className="size-4 text-red-600"
                   aria-hidden="true"
                 />
                 <AlertDescription className="text-xs">
-                  {formNotice}
+                  {errorMessage}
                 </AlertDescription>
               </Alert>
             ) : null}
-            <Input
-              type="email"
-              placeholder="Email nội bộ (@greenroots.vn)"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-11"
-            />
-            <Input
-              type="password"
-              placeholder="Mật khẩu"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="h-11"
-            />
+
+            <div className="space-y-1">
+              <Input
+                type="email"
+                placeholder="Email nội bộ (@greenroots.vn)"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+                required
+                className="h-11"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Mật khẩu"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  required
+                  className="h-11 pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  className="absolute top-1/2 right-1 size-9 -translate-y-1/2 text-gray-400 hover:bg-transparent hover:text-gray-600"
+                >
+                  {showPassword ? (
+                    <EyeOff className="size-4" />
+                  ) : (
+                    <Eye className="size-4" />
+                  )}
+                </Button>
+              </div>
+
+              <div className="flex justify-end pt-1">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-semibold text-brand-forest hover:underline"
+                >
+                  Quên mật khẩu?
+                </Link>
+              </div>
+            </div>
+
             <Button
               type="submit"
+              disabled={isLoading}
               className="h-11 w-full bg-brand-forest font-bold text-white hover:bg-brand-dark"
             >
-              Đăng nhập
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="size-4 animate-spin" />
+                  <span>Đang xác thực...</span>
+                </span>
+              ) : (
+                "Đăng nhập"
+              )}
             </Button>
           </form>
 
-          <div className="space-y-2 border-t border-border-subtle pt-4">
-            <p className="text-center text-xs font-semibold text-gray-500">
-              Đăng nhập nhanh theo vai trò (Demo)
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleQuickLogin("farm_staff")}
-                className="min-h-12 text-xs font-semibold"
-              >
-                Farm Staff (Mobile)
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleQuickLogin("sales")}
-                className="min-h-12 text-xs font-semibold"
-              >
-                Sales (FEFO)
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleQuickLogin("admin")}
-                className="min-h-12 text-xs font-semibold"
-              >
-                Admin (Vận hành)
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleQuickLogin("super_admin")}
-                className="min-h-12 text-xs font-semibold"
-              >
-                SuperAdmin
-              </Button>
+          {/* Cụm nút Demo: Chỉ hiển thị ở môi trường Dev trên máy dev, tự động ẩn ở Production */}
+          {import.meta.env.DEV && (
+            <div className="space-y-2 border-t border-border-subtle pt-4">
+              <p className="text-center text-xs font-semibold text-gray-500">
+                Đăng nhập nhanh theo vai trò (Chỉ hiển thị môi trường Dev)
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleQuickLogin("farm_staff")}
+                  className="min-h-12 text-xs font-semibold"
+                >
+                  Farm Staff (Mobile)
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleQuickLogin("sales")}
+                  className="min-h-12 text-xs font-semibold"
+                >
+                  Sales (FEFO)
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleQuickLogin("admin")}
+                  className="min-h-12 text-xs font-semibold"
+                >
+                  Admin (Vận hành)
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleQuickLogin("super_admin")}
+                  className="min-h-12 text-xs font-semibold"
+                >
+                  SuperAdmin
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
