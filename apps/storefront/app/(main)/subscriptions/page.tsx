@@ -5,7 +5,7 @@ export default function SubscriptionsPage() {
   const plans = getSubscriptionPlans();
 
   return (
-    <div className="mx-auto max-w-screen-xl px-3 pt-[152px] pb-12 lg:px-4 lg:pt-[124px]">
+    <div className="mx-auto max-w-7xl px-3 pt-38 pb-12 lg:px-4 lg:pt-31">
       <SubscriptionBuilder plans={plans} />
     </div>
   );

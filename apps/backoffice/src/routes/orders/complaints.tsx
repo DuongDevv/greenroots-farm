@@ -513,14 +513,21 @@ export function ComplaintsManagementPage() {
             filteredComplaints.map((item) => {
               const isSelected = item.id === selectedComplaint?.id;
               return (
-                <button
-                  type="button"
+                <div
+                  role="button"
+                  tabIndex={0}
                   key={item.id}
                   onClick={() => {
                     setSelectedId(item.id);
                     setIsVideoPlaying(false);
                   }}
-                  className={`w-full rounded-xl border p-4 text-left transition-all duration-150 ${
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setSelectedId(item.id);
+                      setIsVideoPlaying(false);
+                    }
+                  }}
+                  className={`w-full cursor-pointer rounded-xl border p-4 text-left transition-all duration-150 ${
                     isSelected
                       ? "border-2 border-brand-forest bg-white shadow-md ring-2 ring-brand-forest/10"
                       : "border-border-subtle bg-white hover:border-gray-300 hover:bg-gray-50/50"
@@ -565,7 +572,7 @@ export function ComplaintsManagementPage() {
                       {item.claimAmountVnd.toLocaleString("vi-VN")}₫
                     </span>
                   </div>
-                </button>
+                </div>
               );
             })
           )}
@@ -686,17 +693,19 @@ export function ComplaintsManagementPage() {
                   {selectedComplaint.video && (
                     <div className="flex items-center justify-between gap-3 rounded-lg border border-border-subtle bg-gray-50 p-2.5 text-xs">
                       <div className="flex items-center gap-2.5">
-                        <button
+                        <Button
                           type="button"
+                          size="icon"
+                          variant="ghost"
                           onClick={() => setIsVideoPlaying(!isVideoPlaying)}
-                          className="flex size-8 items-center justify-center rounded-full bg-brand-forest text-white transition-colors hover:bg-brand-dark"
+                          className="flex size-8 items-center justify-center rounded-full bg-brand-forest text-white transition-colors hover:bg-brand-dark hover:text-white"
                         >
                           {isVideoPlaying ? (
                             <Pause className="size-4" />
                           ) : (
                             <Play className="ml-0.5 size-4" />
                           )}
-                        </button>
+                        </Button>
                         <div>
                           <p className="font-bold text-gray-900">
                             {selectedComplaint.video.filename}
@@ -837,9 +846,9 @@ export function ComplaintsManagementPage() {
 
               {/* Resolution Options */}
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-gray-700">
+                <span className="text-xs font-bold text-gray-700">
                   Chọn phương án giải quyết
-                </Label>
+                </span>
                 <RadioGroup
                   value={resolutionType}
                   onValueChange={(val) =>
@@ -848,7 +857,7 @@ export function ComplaintsManagementPage() {
                   className="space-y-2"
                 >
                   {/* Option 1: Refund */}
-                  <label
+                  <div
                     className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${
                       resolutionType === "refund"
                         ? "border-2 border-brand-forest bg-green-50/40"
@@ -873,7 +882,10 @@ export function ComplaintsManagementPage() {
                       {resolutionType === "refund" && (
                         <div className="grid grid-cols-2 gap-2 pt-2">
                           <div>
-                            <Label className="text-[11px] text-gray-600">
+                            <Label
+                              htmlFor="refund-channel-select"
+                              className="text-[11px] text-gray-600"
+                            >
                               Kênh hoàn tiền
                             </Label>
                             <Select
@@ -896,10 +908,14 @@ export function ComplaintsManagementPage() {
                             </Select>
                           </div>
                           <div>
-                            <Label className="text-[11px] text-gray-600">
+                            <Label
+                              htmlFor="refund-amount-input"
+                              className="text-[11px] text-gray-600"
+                            >
                               Số tiền hoàn (₫)
                             </Label>
                             <Input
+                              id="refund-amount-input"
                               type="number"
                               value={refundAmount}
                               onChange={(e) => setRefundAmount(e.target.value)}
@@ -909,10 +925,10 @@ export function ComplaintsManagementPage() {
                         </div>
                       )}
                     </div>
-                  </label>
+                  </div>
 
                   {/* Option 2: Replacement */}
-                  <label
+                  <div
                     className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${
                       resolutionType === "replacement"
                         ? "border-2 border-brand-forest bg-green-50/40"
@@ -943,7 +959,7 @@ export function ComplaintsManagementPage() {
                         </div>
                       )}
                     </div>
-                  </label>
+                  </div>
                 </RadioGroup>
               </div>
 

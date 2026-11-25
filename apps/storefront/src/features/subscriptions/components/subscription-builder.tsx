@@ -322,9 +322,11 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
                     {FAVORITE_OPTIONS.map((item) => {
                       const active = favorites.includes(item);
                       return (
-                        <button
+                        <Button
                           key={item}
                           type="button"
+                          variant="outline"
+                          size="sm"
                           onClick={() => toggleFavorite(item)}
                           className={`flex items-center gap-1 rounded-xl px-3 py-1.5 font-semibold transition ${
                             active
@@ -338,7 +340,7 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
                             "+"
                           )}
                           <span>{item}</span>
-                        </button>
+                        </Button>
                       );
                     })}
                   </div>
@@ -353,9 +355,11 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
                     {ALLERGY_OPTIONS.map((item) => {
                       const active = allergies.includes(item);
                       return (
-                        <button
+                        <Button
                           key={item}
                           type="button"
+                          variant="outline"
+                          size="sm"
                           onClick={() => toggleAllergy(item)}
                           className={`flex items-center gap-1 rounded-xl px-3 py-1.5 font-semibold transition ${
                             active
@@ -369,7 +373,7 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
                             "+"
                           )}
                           <span>{item}</span>
-                        </button>
+                        </Button>
                       );
                     })}
                   </div>
@@ -416,25 +420,29 @@ export function SubscriptionBuilder({ plans }: SubscriptionBuilderProps) {
                         {session.dayName} ({session.dateLabel})
                       </b>
                       {isPaused ? (
-                        <button
+                        <Button
                           type="button"
+                          variant="outline"
+                          size="sm"
                           onClick={() =>
                             togglePauseSession(session.sessionNumber)
                           }
-                          className="rounded border border-amber-300 bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900"
+                          className="h-6 rounded border border-amber-300 bg-amber-100 px-2 text-[10px] font-bold text-amber-900 hover:bg-amber-200"
                         >
                           Đã hoãn (Khôi phục)
-                        </button>
+                        </Button>
                       ) : (
-                        <button
+                        <Button
                           type="button"
+                          variant="outline"
+                          size="sm"
                           onClick={() =>
                             togglePauseSession(session.sessionNumber)
                           }
-                          className="rounded border border-blue-200 bg-white px-2 py-0.5 text-[10px] font-bold text-blue-600 hover:text-blue-800"
+                          className="h-6 rounded border border-blue-200 bg-white px-2 text-[10px] font-bold text-blue-600 hover:bg-blue-50 hover:text-blue-800"
                         >
                           Tạm dừng kỳ này
-                        </button>
+                        </Button>
                       )}
                     </div>
                   );
