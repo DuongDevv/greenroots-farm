@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { fetchApiHealth } from "@/lib/api-client";
-import { getDefaultRouteForRole, useAuthStore } from "@/stores/auth.store";
+import { useAuthStore } from "@/stores/auth.store";
 
 interface NavItem {
   readonly to: string;
@@ -108,7 +108,6 @@ export function BackofficeShell({
 }) {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  const loginDemoRole = useAuthStore((state) => state.loginDemoRole);
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -126,11 +125,6 @@ export function BackofficeShell({
   const visibleItems = NAV_ITEMS.filter((item) =>
     item.roles.includes(user.role),
   );
-
-  function handleRoleSwitch(role: UserRole) {
-    loginDemoRole(role);
-    void navigate({ to: getDefaultRouteForRole(role) });
-  }
 
   function handleLogout() {
     logout();
@@ -243,23 +237,6 @@ export function BackofficeShell({
               {health?.reachable ? "Online" : "Offline"}
             </Badge>
           </div>
-          {import.meta.env.DEV ? (
-            <div className="grid grid-cols-2 gap-1.5">
-              {(["farm_staff", "sales", "admin", "super_admin"] as const).map(
-                (r) => (
-                  <Button
-                    key={r}
-                    size="xs"
-                    variant={user.role === r ? "default" : "outline"}
-                    onClick={() => handleRoleSwitch(r)}
-                    className="text-[11px]"
-                  >
-                    {r}
-                  </Button>
-                ),
-              )}
-            </div>
-          ) : null}
           <Button
             variant="outline"
             size="sm"

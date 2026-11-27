@@ -1,4 +1,3 @@
-import type { UserRole } from "@greenroots/shared";
 import {
   Alert,
   AlertDescription,
@@ -29,14 +28,7 @@ function LoginPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const setSession = useAuthStore((state) => state.setSession);
-  const loginDemoRole = useAuthStore((state) => state.loginDemoRole);
   const navigate = useNavigate();
-
-  // Đăng nhập nhanh cho môi trường Dev
-  function handleQuickLogin(role: UserRole) {
-    loginDemoRole(role);
-    void navigate({ to: getDefaultRouteForRole(role) });
-  }
 
   // Xử lý đăng nhập bằng API thật
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -188,49 +180,6 @@ function LoginPage() {
               )}
             </Button>
           </form>
-
-          {/* Cụm nút Demo: Chỉ hiển thị ở môi trường Dev trên máy dev, tự động ẩn ở Production */}
-          {import.meta.env.DEV && (
-            <div className="space-y-2 border-t border-border-subtle pt-4">
-              <p className="text-center text-xs font-semibold text-gray-500">
-                Đăng nhập nhanh theo vai trò (Chỉ hiển thị môi trường Dev)
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleQuickLogin("farm_staff")}
-                  className="min-h-12 text-xs font-semibold"
-                >
-                  Farm Staff (Mobile)
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleQuickLogin("sales")}
-                  className="min-h-12 text-xs font-semibold"
-                >
-                  Sales (FEFO)
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleQuickLogin("admin")}
-                  className="min-h-12 text-xs font-semibold"
-                >
-                  Admin (Vận hành)
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleQuickLogin("super_admin")}
-                  className="min-h-12 text-xs font-semibold"
-                >
-                  SuperAdmin
-                </Button>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
